@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # ONITON 1.0 — PRIVATE SOURCE (공개 금지)
 UI: MRX / Script: MRX
 
@@ -14,3 +15,7 @@ UI: MRX / Script: MRX
 
 ## 언어
 ko, en, ru, zh, hi, es, fr, ar, bn, pt. ko/en 은 Lang.cs, 나머지는 Assets/lang/*.json.
+=======
+# ONITON
+ONITON - serverless local password vault (binaries only)
+>>>>>>> d3ff682c8713ed6fafceacc69142b02705f1fee4
