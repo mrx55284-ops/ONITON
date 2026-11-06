@@ -1,0 +1,16 @@
+bin/
+obj/
+dist/
+dist-mac/
+data/
+vault.dat*
+attempts.json
+settings.txt
+ONITON.portable
+*.pkg
+*.zip
+*.key
+.DS_Store
+*.lock
+tests/**/bin/
+tests/**/obj/

@@ -1,0 +1,90 @@
+# ★ 반드시 "비공개(Private) 저장소"에서 실행. 결과: Artifact "release-files" (공개용 배포 파일 + SHA256.txt)
+name: release
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with: { dotnet-version: '10.0.x' }
+      - run: dotnet test tests/ONITON.Tests/ONITON.Tests.csproj -c Release
+  windows:
+    needs: test
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with: { dotnet-version: '10.0.x' }
+      - shell: bash
+        run: bash scripts/pub.sh win-x64 obj/pub
+      - shell: pwsh
+        run: |
+          New-Item dist -ItemType Directory -Force | Out-Null
+          Copy-Item obj/pub/ONITON.exe dist/ONITON.exe
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { choco install innosetup -y --no-progress }
+          & $iscc installer/oniton.iss
+      - uses: actions/upload-artifact@v4
+        with:
+          name: win
+          path: |
+            dist/ONITON.exe
+            dist/ONITON-Setup.exe
+  linux:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with: { dotnet-version: '10.0.x' }
+      - run: |
+          bash scripts/pub.sh linux-x64 obj/pub
+          mkdir dist && cp obj/pub/ONITON dist/ONITON-linux-x64 && chmod +x dist/ONITON-linux-x64
+      - uses: actions/upload-artifact@v4
+        with: { name: linux, path: dist/ONITON-linux-x64 }
+  mac:
+    needs: test
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with: { dotnet-version: '10.0.x' }
+      - run: |
+          chmod +x scripts/*.sh
+          ./scripts/build-mac-setup.sh
+          bash scripts/pub.sh osx-x64 obj/pub-x64
+          mkdir -p out
+          cp dist-mac/ONITON-Setup.pkg out/ONITON-Setup.pkg
+          cp obj/pub-osx-arm64/ONITON out/ONITON-macos-arm64
+          cp obj/pub-x64/ONITON out/ONITON-macos-x64
+          chmod +x out/ONITON-macos-*
+      - uses: actions/upload-artifact@v4
+        with: { name: mac, path: out/* }
+  package:
+    needs: [windows, linux, mac]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: { path: files, merge-multiple: true }
+      - run: |
+          cd files
+          # 안전 검사: 개인 데이터가 섞이면 실패
+          if ls | grep -Ei 'vault|attempts|settings|portable'; then echo "개인 데이터 발견"; exit 1; fi
+          cd ..
+          mkdir -p kit-build/ONITON-USB/data
+          cp files/ONITON.exe files/ONITON-linux-x64 files/ONITON-macos-arm64 files/ONITON-macos-x64 kit-build/ONITON-USB/
+          cp kit/* kit-build/ONITON-USB/
+          touch kit-build/ONITON-USB/ONITON.portable
+          chmod +x kit-build/ONITON-USB/ONITON-linux-x64 kit-build/ONITON-USB/ONITON-macos-* kit-build/ONITON-USB/*.command kit-build/ONITON-USB/*.sh
+          (cd kit-build/ONITON-USB && sha256sum ONITON.exe ONITON-linux-x64 ONITON-macos-arm64 ONITON-macos-x64 > CHECKSUMS.txt)
+          if find kit-build -iname 'vault.dat*' -o -iname 'attempts.json' -o -iname 'settings.txt' | grep -q .; then echo "키트에 개인 데이터 발견"; exit 1; fi
+          (cd kit-build && zip -qr ../files/ONITON-USB-Kit.zip ONITON-USB)
+          cd files
+          sha256sum * > SHA256.txt && ls -la
+      - uses: actions/upload-artifact@v4
+        with: { name: release-files, path: files/* }
