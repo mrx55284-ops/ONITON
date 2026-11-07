@@ -1,0 +1,177 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="ONITON.MainWindow"
+        Title="ONITON" Width="780" Height="560" CanResize="False"
+        SystemDecorations="None" Background="#F0F0F0"
+        FontFamily="Tahoma, Segoe UI, Malgun Gothic, Apple SD Gothic Neo, Arial" FontSize="12" FontWeight="Light" Foreground="Black"
+        WindowStartupLocation="CenterScreen">
+  <Window.Styles>
+    <Style Selector="Button.tb">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Padding" Value="0"/>
+      <Setter Property="HorizontalContentAlignment" Value="Center"/>
+      <Setter Property="VerticalContentAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="Button.tb:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#E5E5E5"/>
+    </Style>
+    <Style Selector="Button.close:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="#E81123"/>
+      <Setter Property="Foreground" Value="White"/>
+    </Style>
+    <Style Selector="Button.eye">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Padding" Value="8,0"/>
+      <Setter Property="MinHeight" Value="0"/>
+    </Style>
+    <Style Selector="TextBox.ghost /template/ Border#PART_BorderElement"><Setter Property="Background" Value="Transparent"/></Style>
+    <Style Selector="TextBox.ghost:focus /template/ Border#PART_BorderElement"><Setter Property="Background" Value="Transparent"/></Style>
+    <Style Selector="TextBox.ghost:pointerover /template/ Border#PART_BorderElement"><Setter Property="Background" Value="Transparent"/></Style>
+  </Window.Styles>
+  <Border BorderBrush="#5A5A5A" BorderThickness="1">
+    <Grid RowDefinitions="30,Auto,*">
+      <!-- 제목 표시줄 -->
+      <Border x:Name="TitleBar" Background="White" BorderBrush="#D0D0D0" BorderThickness="0,0,0,1">
+        <Grid ColumnDefinitions="*,Auto">
+          <TextBlock Text="ONITON" VerticalAlignment="Center" Margin="10,0"/>
+          <StackPanel Grid.Column="1" Orientation="Horizontal">
+            <ComboBox x:Name="LangCombo" Width="130" Height="26" MinHeight="26" Padding="8,0" VerticalAlignment="Center" Margin="0,0,6,0"/>
+            <Button x:Name="MinBtn" Classes="tb flat" Content="—" Width="46" Height="29"/>
+            <Button x:Name="CloseBtn" Classes="tb flat close" Content="X" Width="46" Height="29"/>
+          </StackPanel>
+        </Grid>
+      </Border>
+
+      <!-- 메뉴 막대 (로그인 후에만 표시) -->
+      <Menu x:Name="MainMenu" Grid.Row="1" IsVisible="False" Background="#F0F0F0">
+        <MenuItem x:Name="MFile">
+          <MenuItem x:Name="MExport"/>
+          <MenuItem x:Name="MUsb"/>
+          <MenuItem x:Name="MImport"/>
+          <MenuItem x:Name="MImportCsv"/>
+          <Separator/>
+          <MenuItem x:Name="MChangeMaster"/>
+          <Separator/>
+          <MenuItem x:Name="MLock"/>
+        </MenuItem>
+        <MenuItem x:Name="MTools">
+          <MenuItem x:Name="MGen"/>
+          <MenuItem x:Name="MLog"/>
+          <Separator/>
+          <MenuItem x:Name="MLauncher"/>
+          <MenuItem x:Name="MPanic"/>
+        </MenuItem>
+        <MenuItem x:Name="MHelp">
+          <MenuItem x:Name="MUsage"/>
+          <MenuItem x:Name="MAbout"/>
+        </MenuItem>
+      </Menu>
+
+      <Grid Grid.Row="2">
+        <Grid x:Name="Body">
+          <Image x:Name="BgImage" Opacity="0.35" Stretch="Uniform" Margin="12" IsHitTestVisible="False">
+            <Image.Transitions>
+              <Transitions><DoubleTransition Property="Opacity" Duration="0:0:0.6"/></Transitions>
+            </Image.Transitions>
+          </Image>
+
+          <!-- 처음 실행: 언어 선택 -->
+          <Border x:Name="LangPanel" IsVisible="False" BoxShadow="3 3 0 0 #A0A0A0" Background="Transparent" BorderBrush="#ADADAD" BorderThickness="1" Margin="8" Padding="20,10">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="10" Width="300">
+              <TextBlock Text="언어 선택 / Select language" FontSize="14" HorizontalAlignment="Center"/>
+              <TextBlock Text="나중에 오른쪽 위에서 바꿀 수 있습니다." HorizontalAlignment="Center"/>
+              <TextBlock Text="You can change this later at the top right." HorizontalAlignment="Center"/>
+              <ListBox x:Name="LangList" Height="170" Margin="0,6,0,0"/>
+              <Button x:Name="LangOkBtn" Content="OK" Height="36" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
+            </StackPanel>
+          </Border>
+
+          <!-- 로그인 / 처음 사용 -->
+          <Border x:Name="LockPanel" BoxShadow="3 3 0 0 #A0A0A0" Background="Transparent" BorderBrush="#ADADAD" BorderThickness="1" Margin="8" Padding="20,10">
+            <StackPanel Spacing="4" VerticalAlignment="Center" Margin="70,0">
+              <TextBlock x:Name="LockTitle" FontSize="14"/>
+              <TextBlock x:Name="WelcomeText" IsVisible="False" TextWrapping="Wrap" Margin="0,0,0,6"/>
+              <TextBlock x:Name="LblId"/>
+              <TextBox x:Name="IdBox"/>
+              <TextBlock x:Name="LblPw"/>
+              <TextBox x:Name="MasterBox" PasswordChar="●">
+                <TextBox.InnerRightContent><Button x:Name="EyeBtn1" Classes="eye flat"><Image x:Name="EyeImg1" Width="18" Height="18" Opacity="0.35"/></Button></TextBox.InnerRightContent>
+              </TextBox>
+              <TextBlock x:Name="StrengthText" IsVisible="False" FontSize="12"/>
+              <TextBlock x:Name="LblPw2" IsVisible="False"/>
+              <TextBox x:Name="MasterBox2" PasswordChar="●" IsVisible="False">
+                <TextBox.InnerRightContent><Button x:Name="EyeBtn2" Classes="eye flat"><Image x:Name="EyeImg2" Width="18" Height="18" Opacity="0.35"/></Button></TextBox.InnerRightContent>
+              </TextBox>
+              <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,4,0,0">
+                <Button x:Name="KeyBtn"/>
+                <Button x:Name="KeyNewBtn" IsVisible="False"/>
+              </StackPanel>
+              <TextBlock x:Name="KeyText" Opacity="0.7" TextWrapping="Wrap" FontSize="11"/>
+              <Button x:Name="UnlockBtn" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Margin="0,6,0,0"/>
+              <TextBlock x:Name="LocText" Opacity="0.6" FontSize="11" TextWrapping="Wrap" Margin="0,6,0,0"/>
+              <TextBlock x:Name="LockMsg" TextWrapping="Wrap"/>
+            </StackPanel>
+          </Border>
+
+          <!-- 금고 -->
+          <Grid x:Name="VaultPanel" IsVisible="False" Margin="8" RowDefinitions="Auto,*,Auto" ColumnDefinitions="250,*">
+            <StackPanel Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="6" Margin="0,0,0,6">
+              <Button x:Name="AddBtn"/>
+              <Button x:Name="LogoutBtn"/>
+              <TextBlock x:Name="LblSearch" VerticalAlignment="Center" Margin="16,0,0,0"/>
+              <TextBox x:Name="SearchBox" Width="200"/>
+            </StackPanel>
+
+            <!-- 항목 목록 (GroupBox 스타일) -->
+            <Grid Grid.Row="1" Margin="0,0,8,0">
+              <Border Margin="0,8,0,0" BorderBrush="#A0A0A0" BorderThickness="1" BoxShadow="1 1 0 0 #FFFFFF, inset 1 1 0 0 #FFFFFF" Padding="6,14,6,6">
+                <ListBox x:Name="List" Background="#CCFFFFFF" BorderBrush="#808080" BorderThickness="1"/>
+              </Border>
+              <TextBlock x:Name="GrpList" Background="#F0F0F0" Margin="10,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Padding="4,0"/>
+            </Grid>
+
+            <!-- 항목 정보 (GroupBox 스타일) -->
+            <Grid Grid.Row="1" Grid.Column="1">
+              <Border Margin="0,8,0,0" BorderBrush="#A0A0A0" BorderThickness="1" BoxShadow="1 1 0 0 #FFFFFF, inset 1 1 0 0 #FFFFFF" Padding="10,16,10,8">
+                <StackPanel Spacing="3">
+                  <TextBlock x:Name="LblSite"/>
+                  <Grid Background="White">
+                    <TextBlock x:Name="GhostText" Opacity="0.35" Margin="7,0,0,0" VerticalAlignment="Center" IsHitTestVisible="False" IsVisible="False"/>
+                    <TextBlock x:Name="GhostHint" Text="Tab" Opacity="0.35" Margin="0,0,8,0" HorizontalAlignment="Right" VerticalAlignment="Center" IsHitTestVisible="False" IsVisible="False"/>
+                    <TextBox x:Name="SiteBox" Classes="ghost" Padding="6,3"/>
+                  </Grid>
+                  <TextBlock x:Name="LblUrl"/>
+                  <Grid ColumnDefinitions="*,Auto"><TextBox x:Name="UrlBox"/><Button x:Name="OpenBtn" Grid.Column="1" Margin="6,0,0,0"/></Grid>
+                  <TextBlock x:Name="LblUser"/>
+                  <Grid ColumnDefinitions="*,Auto"><TextBox x:Name="UserBox"/><Button x:Name="CopyUserBtn" Grid.Column="1" Margin="6,0,0,0"/></Grid>
+                  <TextBlock x:Name="LblPass"/>
+                  <Grid ColumnDefinitions="*,Auto,Auto">
+                    <TextBox x:Name="PassBox" PasswordChar="●">
+                      <TextBox.InnerRightContent><Button x:Name="EyeEntry" Classes="eye flat"><Image x:Name="EyeImgEntry" Width="18" Height="18" Opacity="0.35"/></Button></TextBox.InnerRightContent>
+                    </TextBox>
+                    <Button x:Name="CopyBtn" Grid.Column="1" Margin="6,0,0,0"/>
+                    <Button x:Name="GenBtn" Grid.Column="2" Margin="6,0,0,0"/>
+                  </Grid>
+                  <TextBlock x:Name="LblNote"/>
+                  <TextBox x:Name="NoteBox"/>
+                  <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,8,0,0">
+                    <Button x:Name="SaveBtn"/>
+                    <Button x:Name="DelBtn"/>
+                  </StackPanel>
+                </StackPanel>
+              </Border>
+              <TextBlock x:Name="GrpDetail" Background="#F0F0F0" Margin="10,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Padding="4,0"/>
+            </Grid>
+
+            <!-- 상태 표시줄 (움푹 들어간 테두리) -->
+            <Border Grid.Row="2" Grid.ColumnSpan="2" Margin="0,8,0,0" Padding="6,3" BorderBrush="#A0A0A0" BorderThickness="1" BoxShadow="inset 1 1 0 0 #808080, 1 1 0 0 #FFFFFF">
+              <TextBlock x:Name="StatusText"/>
+            </Border>
+          </Grid>
+        </Grid>
+      </Grid>
+    </Grid>
+  </Border>
+</Window>

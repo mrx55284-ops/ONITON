@@ -1,0 +1,34 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="ONITON.App"
+             RequestedThemeVariant="Light">
+  <Application.Styles>
+    <FluentTheme />
+  </Application.Styles>
+  <Application.Resources>
+    <!-- 모든 둥근 모서리 제거 (WinForms 스타일 사각형) -->
+    <CornerRadius x:Key="ControlCornerRadius">0</CornerRadius>
+    <x:Double x:Key="ControlContentThemeFontSize">12</x:Double>
+    <CornerRadius x:Key="OverlayCornerRadius">0</CornerRadius>
+    <SolidColorBrush x:Key="SystemRegionBrush" Color="#F0F0F0" />
+  </Application.Resources>
+  <Application.Styles>
+    <Style Selector="Window"><Setter Property="Background" Value="#F0F0F0"/></Style>
+    <Style Selector="Button">
+      <Setter Property="CornerRadius" Value="0"/>
+      <Setter Property="Background" Value="#E1E1E1"/>
+      <Setter Property="BorderBrush" Value="#ADADAD"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="Padding" Value="10,3"/>
+    </Style>
+    <Style Selector="TextBox"><Setter Property="CornerRadius" Value="0"/></Style>
+    <!-- 2000년대 폼 느낌의 입체 윤곽선/그림자 -->
+    <Style Selector="Button:not(.flat) /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="BoxShadow" Value="inset 1 1 0 0 #FFFFFF, inset -1 -1 0 0 #A0A0A0, 2 2 0 0 #808080"/>
+    </Style>
+    <Style Selector="TextBox /template/ Border#PART_BorderElement">
+      <Setter Property="BoxShadow" Value="inset 1 1 0 0 #808080, inset 2 2 0 0 #D0D0D0"/>
+    </Style>
+    <Style Selector="ListBox"><Setter Property="CornerRadius" Value="0"/></Style>
+  </Application.Styles>
+</Application>
