@@ -13,7 +13,7 @@
 ### 위협 시나리오와 대응
 | # | 공격 / 사고 | 대응 | 남는 위험 |
 |---|---|---|---|
-| 1 | 금고 파일을 훔쳐 오프라인으로 비밀번호 대입 | Argon2id 128 MiB, 키 파일(선택), 10자 이상·흔한 비밀번호 차단 | 약한 비밀번호는 결국 뚫림 |
+| 1 | 금고 파일을 훔쳐 오프라인으로 비밀번호 대입 | Argon2id 128 MiB, 키 파일(선택), 12자 이상·흔한 비밀번호 차단 | 약한 비밀번호는 결국 뚫림 |
 | 2 | 금고 파일 변조(헤더/salt/암호문 수정) | AES-GCM 인증 + 헤더 AAD, 변조 시 열리지 않음 | 파일 삭제·교체(가용성)는 막을 수 없음 → 백업 5개 |
 | 3 | 악의적인 파일로 메모리 고갈(KDF 값 조작, 거대 파일) | KDF 값 상한, 64 MB 상한 | – |
 | 4 | 화면에서 입력값 훔쳐보기 | 비밀번호 칸 가림, 복사한 비밀번호 15초 뒤 삭제 | 어깨너머, 카메라 |
@@ -26,9 +26,20 @@
 | 11 | 비밀번호를 바꿨는데 옛 백업으로 열림 | 변경 시 모든 백업 삭제 | 사용자가 따로 복사해 둔 파일 |
 | 12 | 평문 CSV(크롬 내보내기) 유출 | 가져온 뒤 덮어써서 삭제할지 묻기 | SSD/클라우드 폴더에서는 완전 삭제 보장 없음 |
 | 13 | 다른 컴퓨터에서 한글 입력 형태가 달라 못 엶 | 새 아이디/비밀번호는 ASCII만 허용 | 기존 금고는 영향 없음 |
-| 14 | 가짜/변조된 설치 파일 배포 | SHA256, (코드 서명은 아직 없음) | 서명 전에는 OS 경고가 뜸 |
-| 15 | 의존 패키지 취약점 | 빌드 때 `dotnet list package --vulnerable` 확인 | 정기 점검 필요 |
+| 14 | 가짜/변조된 배포 파일 | SHA256 + **개발자 키로 서명한 SHA256.txt.sig** (아래 확인 방법), 빌드 도구는 커밋 해시로 고정·최소 권한 | OS 코드 서명은 아직 없어 경고가 뜸. 개발자 계정/키가 탈취되면 무력 |
+| 15 | 의존 패키지·빌드 도구 취약점 | 빌드 때 `dotnet list package --vulnerable` 확인, GitHub Actions 커밋 해시 고정 | 정기 점검 필요 |
 | 16 | 프로그램이 몰래 외부로 전송 | 네트워크 코드 없음 (직접 검색해 확인 가능) | – |
+| 17 | USB를 뽑았는데 열린 금고가 남음 | 금고 파일에 접근할 수 없으면 2초 안에 자동 잠금·메모리 비움 | 뽑기 직전 몇 초 |
+| 18 | 같은 사용자의 다른 프로그램이 메모리를 읽음/코어 덤프 | Linux: 덤프·메모리 접근 차단, macOS: 디버거 부착 차단 | 관리자(root) 권한 공격자, Windows는 별도 차단 없음 |
+
+### 배포 파일 확인 방법
+1. `SHA256.txt`, `SHA256.txt.sig`, 이 저장소의 `allowed_signers` 를 받습니다.
+2. 서명 확인 (맥/리눅스/윈도우 10+ PowerShell 모두 `ssh-keygen` 사용):
+   `ssh-keygen -Y verify -f allowed_signers -I oniton-release -n oniton -s SHA256.txt.sig < SHA256.txt`
+   (윈도우 PowerShell 에서는 `<` 를 쓸 수 없으니 앞뒤를 감싸세요: `cmd /c "ssh-keygen -Y verify -f allowed_signers -I oniton-release -n oniton -s SHA256.txt.sig < SHA256.txt"`)
+   `Good "oniton" signature` 가 나와야 합니다.
+3. 받은 파일의 해시가 같은지 확인: 맥 `shasum -a 256 -c SHA256.txt`, 리눅스 `sha256sum -c SHA256.txt`, 윈도우 `Get-FileHash 파일 -Algorithm SHA256`.
+4. 키 지문은 개발자가 별도 채널에도 공개합니다. 저장소 한 곳만 믿지 마세요.
 
 ### 보호하지 못하는 것
 - **키로거·악성코드·원격 제어가 있는 컴퓨터에서 입력하는 아이디/비밀번호.** (키 파일을 쓰면 비밀번호만으로는 열 수 없게 해 피해를 줄일 수 있습니다.)
@@ -47,5 +58,7 @@ ONITON is a serverless local password vault: no accounts, no servers, and no net
 - KDF: Argon2id (128 MiB, t=3, p=2, 32-byte random salt per vault; older 64 MiB vaults are upgraded at login; optional key file mixed in as the Argon2 secret via SHA-256).
 - Encryption: AES-256-GCM, fresh 96-bit nonce on every save; the whole header is bound as AAD; KDF parameters and file size are bounded.
 - Saving: temp file → flush → re-read and decrypt to verify → rotate 5 backups → replace. Changing the master deletes old backups.
+- Release integrity: `SHA256.txt` is signed (ssh-keygen -Y verify, see above); build tools are pinned by commit hash.
+- Process hardening: Linux dumpable=0, macOS PT_DENY_ATTACH; the vault locks within ~2 s if its file becomes unreachable (USB removed).
 - Not protected: keyloggers/malware on the machine you type on, memory dumps, unsigned binary forgery (verify SHA256.txt), coercion.
 - Status: **no independent audit and no real penetration test yet.** The threat table above is a design review. Automated tests cover RFC 9106 / NIST vectors and interoperability with an independent implementation (Python `cryptography`). Expert review is welcome.
